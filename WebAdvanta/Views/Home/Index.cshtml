@@ -1,0 +1,226 @@
+﻿@model List<WebAdvanta.Models.EquipamentoModel>
+@{
+    ViewBag.Title = "Listagem";
+}
+<style>
+    #cabecalho_grid > thead > tr th:nth-child(2) {
+        width: 110px;
+    }
+
+    #grid_cadastro > thead > tr th:nth-child(3) {
+        width: 200px;
+    }
+
+    #Cadastro {
+        width: 70%;
+        margin: 0 auto;
+    }
+
+    #cadastro_cabecalho {
+        border-bottom: 1px #dddddd solid;
+    }
+
+    #cadastro_conteudo {
+        margin-top: 20px;
+    }
+
+    #cabecalho_grid {
+        margin-bottom: 20px;
+    }
+</style>
+
+<div id="Cadastro">
+    <section id="cadastro_cabecalho">
+        <h1>@ViewBag.Title</h1>
+    </section>
+    <section id="cadastro_conteudo">
+        <div id="cabecalho_grid" class="row">
+            <div class="col-md-12">
+                <a id="btn_incluir" class="btn btn-success" role="button"><i class="glyphicon glyphicon-plus"></i>Incluir</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <table id="grid_cadastro" class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <td>Codigo Equipamento</td>
+                            <td>Equipamento</td>
+                            <td>Usuario</td>
+                            <td>Ação</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        @foreach (var item in Model)
+                        {
+                            <tr data-codigo="@item.Codigo">
+                                <td>@item.Codigo</td>
+                                <td>@item.Nome</td>
+                                <td>@item.IdUsuario</td>
+                                <td>
+                                    <a class="btn btn-primary btn-alterar" role="button"><i class="glyphicon glyphicon-pencil"></i>Alterar</a>
+                                    <a class="btn btn-danger btn-excluir" role="button"><i class="glyphicon glyphicon-trash"></i>Excluir</a>
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+<div id="modal_cadastro" class="form-horizontal invisivel" role="dialog">
+    <fieldset>
+        <div class="row">
+            <div class="form-group invisivel">
+                @Html.Label("txt_codigo", "Codigo", new { @class = "col-md-3 control-label" })
+                <div class="col-md-6">
+                    @Html.TextBox("txt_codigo", null, new { @classs = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                @Html.Label("txt_equipamento", "Equimamento", new { @class = "col-md-3 control-label" })
+                <div class="col-md-6">
+                    @Html.TextBox("txt_equipamento", null, new { @classs = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                @Html.Label("txt_usuario", "Usuario", new { @class = "col-md-3 control-label" })
+                <div class="col-md-6">
+                    @Html.TextBox("txt_usuario", null, new { @classs = "form-control" })
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="modal-footer">
+                        <a id="btn_sair" class="btn btn-default" role="button" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Sair</a>
+                        <a id="btn_confimar" class="btn btn-primary" role="button"><i class="glyphicon glyphicon-ok"></i> Salvar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+@Html.Hidden("id_cadastro");
+
+@section Scripts{
+    <script>
+        function abrir_form(dados) {
+            $('#id_cadastro').val(dados.codigo)
+            $('#txt_codigo').val(dados.Codigo);
+            $('#txt_equipamento').val(dados.Nome);
+            $('#txt_usuario').val(dados.IdUsuario);
+
+            var modal_cadastro = $('#modal_cadastro');
+
+            bootbox.dialog({
+                title: 'Cadastro',
+                message: modal_cadastro
+            })
+                .on('shown.bs.modal', function () {
+                    modal_cadastro.show(0, function () {
+                        $('#txt_codigo').focus();
+                    });
+                })
+                .on('hidden.bs.modal', function () {
+                    modal_cadastro.hide().appendTo('body');
+                });
+        }
+
+        function criar_linha_grid(dados) {
+            var ret =
+                '<tr data-codigo=' + dados.codigo + '>' +
+                '<td>' + dados.Codigo + '</td>' +
+                '<td>' + dados.Nome + '</td>' +
+                '<td>' + dados.IdUsuario + '</td>' +
+                '<td' +
+                '<a class="btn btn-primary btn-alterar" role="button" style="margin-right: 3px"><i class="glyphicon glyphicon-pencil"></i>Alterar</a>' +
+                '<a class="btn btn-danger btn-excluir" role="button"><i class="glyphicon glyphicon-trash"></i>Excluir</a>' +
+                '</td>' +
+                '</tr>';
+
+            return ret;
+                            
+        }
+
+        $(document).on('click', '#btn_incluir', function () {
+            abrir_form({ Codigo: '0', Equipamento: '', Usuario: '' });
+        })
+            .on('click', '.btn-alterar', function () {
+
+                var btn = $(this),
+                    Codigo = btn.closest('tr').attr('data-codigo'),
+                    url = '@Url.Action("RecuperarEquipamento", "Home")';
+                param = { 'codigo': Codigo };
+
+                $.post(url, param, function (response) {
+                    if (response) {
+                        abrir_form(response);
+                    }
+                });
+            })
+            .on('click', '.btn-excluir', function () {
+                var btn = $(this),
+                    tr = btn.closest('tr'),
+                    Codigo = tr.attr('data-codigo'),
+                    url = '@Url.Action("ExcluirEquipamento", "Home")';
+                param = { 'codigo': Codigo };
+
+                bootbox.confirm({
+                    message: "Realmente deseja excluir esse item da lista? ",
+                    buttons: {
+                        confirm: {
+                            label: 'Sim',
+                            className: 'btn-success'
+                        },
+                        cancel: {
+                            label: 'Não',
+                            className: 'btn-danger'
+                        }
+                    },
+                    callback: function (result) {
+                        if (result) {
+                            $.post(url, param, function (response) {
+                                if (response) {
+                                    tr.remove();
+                                }
+                            });
+                        }
+                    }
+                });
+            })
+            .on('click', '#btn_confimar', function () {
+                var btn = $(this),
+                    url = '@Url.Action("SalvarEquipamento", "Home")',
+                param = {
+                    codigo: $('#id_cadastro').val(),
+                    Equipamento: $('#txt_equipamento').val(),
+                    Usuario: $('#txt_usuario').val(),
+                };
+
+                $.post(url, param, function (response) {
+                    if (response) {
+                        if (param.Codigo == 0) {
+                            var table = $('#grid_cadastro').find('tbody'),
+                                linha = criar_linha_grid(response);
+
+                            table.append(linha);
+                        }
+                        else {
+                            var linha = $('#grid_cadastro').find('tr[data-codigo=' + param.Codigo + ']').find('td');
+                            linha
+                                .eq(0).html(param.Equipamento).end()
+                                .eq(0).html(param.IdUsuario).end()
+
+                        }
+
+                        $('#modal_cadastro').parents('.bootbox').modal('hide');
+                    }
+                });
+            });
+    </script>
+}
